@@ -1,6 +1,6 @@
 ---
 name: moodle-development
-description: Guides correct Moodle core and plugin development decisions: APIs, plugin structure, security, database upgrades, UI, tests, and coding standards. Use when editing or reviewing Moodle PHP/JS code, creating Moodle plugins, writing upgrades, using Moodle APIs, or when the user mentions Moodle, LMS plugins, activities, blocks, local plugins, enrolment, gradebook, capabilities, Behat, or PHPUnit in a Moodle codebase.
+description: "Guides correct Moodle core and plugin development decisions: APIs, plugin structure, security, database upgrades, UI, tests, and coding standards. Use when editing or reviewing Moodle PHP/JS code, creating Moodle plugins, writing upgrades, using Moodle APIs, or when the user mentions Moodle, LMS plugins, activities, blocks, local plugins, enrolment, gradebook, capabilities, Behat, or PHPUnit in a Moodle codebase."
 ---
 
 # Moodle Development

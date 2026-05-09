@@ -1,0 +1,11 @@
+{
+  "name": "breno-agent-skills",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Agent skills for Pi and compatible skill-aware coding agents.",
+  "keywords": ["pi-package", "agent-skills", "moodle"],
+  "license": "MIT",
+  "pi": {
+    "skills": ["./skills"]
+  }
+}
