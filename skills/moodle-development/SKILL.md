@@ -1,6 +1,6 @@
 ---
 name: moodle-development
-description: Moodle dev guardrails: plugins, core APIs, security, DB upgrades, UI, tests. Use for Moodle PHP/JS, plugins, LMS activities/blocks/local plugins, gradebook, capabilities, Behat, PHPUnit.
+description: "Moodle dev guardrails: plugins, core APIs, security, DB upgrades, UI, tests. Use for Moodle PHP/JS, plugins, LMS activities/blocks/local plugins, gradebook, capabilities, Behat, PHPUnit."
 ---
 
 # Moodle dev
