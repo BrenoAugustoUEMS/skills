@@ -1,92 +1,49 @@
 ---
 name: moodle-development
-description: "Guides correct Moodle core and plugin development decisions: APIs, plugin structure, security, database upgrades, UI, tests, and coding standards. Use when editing or reviewing Moodle PHP/JS code, creating Moodle plugins, writing upgrades, using Moodle APIs, or when the user mentions Moodle, LMS plugins, activities, blocks, local plugins, enrolment, gradebook, capabilities, Behat, or PHPUnit in a Moodle codebase."
+description: Moodle dev guardrails: plugins, core APIs, security, DB upgrades, UI, tests. Use for Moodle PHP/JS, plugins, LMS activities/blocks/local plugins, gradebook, capabilities, Behat, PHPUnit.
 ---
 
-# Moodle Development
+# Moodle dev
 
-## Prime directive
+Moodle first. Avoid generic PHP patterns when Moodle API exists. Before change: find Moodle version, component (`type_name`), plugin type, local conventions.
 
-Moodle is an API-heavy PHP application. Prefer Moodle APIs and conventions over framework-generic PHP patterns. Before implementing, identify the Moodle version and plugin/component type, then preserve backwards compatibility for the supported branch.
+## Must-do
 
-Official docs entrypoint: <https://moodledev.io/general/development/gettingstarted>
+- Bootstrap pages with `config.php`.
+- Params via `required_param()` / `optional_param()` + `PARAM_*`. Never raw `$_GET/$_POST`.
+- Auth early: `require_login()`, correct `context_*`, `require_capability()` / `has_capability()`.
+- Mutations need `require_sesskey()` or `moodleform` validation.
+- DB via global `$DB`; placeholders only. No concatenated SQL.
+- Schema: `db/install.xml` + guarded `db/upgrade.php` + `version.php` bump.
+- Output: `$PAGE`, `$OUTPUT`, renderers/templates. Avoid echoed HTML.
+- Escape: `s()`, `format_string()`, `format_text()`, Mustache autoescape.
+- Strings: `lang/en/{component}.php` + `get_string()`.
+- User data: privacy provider.
+- Tests: PHPUnit for logic/DB; Behat for UI workflow.
 
-## Decision checklist
+## Files
 
-1. **Locate the component**
-   - Plugin frankenstyle: `{plugintype}_{pluginname}` (for example `mod_forum`, `local_myplugin`).
-   - Component files usually live under `classes/`, `db/`, `lang/en/`, `tests/`, `templates/`, `amd/src/`.
-   - Check existing code style and branch Moodle version before introducing newer APIs.
-2. **Use Moodle request/page conventions**
-   - Entry scripts start with `require(__DIR__ . '/../../config.php')` adjusted to depth.
-   - Read input with `required_param()`, `optional_param()`, `PARAM_*` only.
-   - Use `moodle_url`, `$PAGE`, `$OUTPUT`, renderer/templates; avoid raw echoed HTML.
-3. **Enforce access and CSRF**
-   - Call `require_login()` or course/module-specific login early.
-   - Resolve `context_*` and check `require_capability()` / `has_capability()`.
-   - Mutating actions require `require_sesskey()` or form validation.
-4. **Use Moodle data APIs**
-   - Use global `$DB`; never concatenate SQL values. Use placeholders and params.
-   - Schema changes go in `db/install.xml` and `db/upgrade.php` via XMLDB manager.
-   - Bump `$plugin->version` in `version.php` for upgrade steps.
-5. **Render safely**
-   - Escape user text with `s()`, `format_string()`, `format_text()`, or Mustache autoescaping.
-   - Use renderables, output classes, and Mustache templates for non-trivial UI.
-6. **Internationalise everything user-facing**
-   - Put strings in `lang/en/{component}.php` and fetch with `get_string()`.
-7. **Choose the right extension point**
-   - Capabilities: `db/access.php`.
-   - Events: `classes/event/*` and observers in `db/events.php`.
-   - Scheduled/ad-hoc tasks: `classes/task/*` and `db/tasks.php`.
-   - Web services/external API: `classes/external/*`, `db/services.php`.
-   - Privacy/GDPR: implement provider interfaces in `classes/privacy/provider.php` when storing user data.
-8. **Test with Moodle tooling**
-   - Add PHPUnit tests under `tests/*_test.php` using Moodle generators.
-   - Add Behat scenarios for user workflows when UI behaviour matters.
-   - Run targeted tests and Moodle codechecker before finishing.
+- Capabilities: `db/access.php`
+- Events: `classes/event/*`, observers `db/events.php`
+- Tasks: `classes/task/*`, `db/tasks.php`
+- Web services: `classes/external/*`, `db/services.php`
+- UI: `classes/output/*`, `templates/*.mustache`, `amd/src/*`
+- Tests: `tests/*_test.php`, `tests/behat/*.feature`
 
-## Common workflows
+## Review smell list
 
-### Add a plugin feature
+Flag: superglobals, PDO/mysqli, SQL interpolation, missing login/capability/sesskey, hardcoded English, unescaped output, raw HTML, schema change without upgrade/version bump, stored user data without privacy API, UI change without tests.
 
-- Confirm plugin type and supported Moodle versions.
-- Find existing component patterns: forms, renderers, services, capabilities, events, tests.
-- Add data model changes through XMLDB + upgrade step if persistent.
-- Add capability checks before reads/writes, not only UI hiding.
-- Add lang strings, tests, and upgrade-safe defaults.
+## Commands
 
-### Add or change DB schema
-
-- Edit `db/install.xml` for fresh installs.
-- Add an idempotent upgrade step in `db/upgrade.php` guarded by `$oldversion < YYYYMMDDXX`.
-- Use `$dbman = $DB->get_manager()` and XMLDB table/field/index objects.
-- Bump `version.php`; never edit production schema directly.
-
-### Add a page or action endpoint
-
-- Bootstrap `config.php`, parse params, derive context, `require_login()`, check capability.
-- For POST/delete/update, verify sesskey and redirect after success.
-- Set `$PAGE->set_url()`, context, title/heading; render via `$OUTPUT`.
-
-### Review Moodle code
-
-Look for: raw `$_GET/$_POST`, direct PDO/mysqli, string-concatenated SQL, missing `require_login`, missing capability, missing sesskey, hardcoded English, unescaped output, schema changes without upgrade, user data without privacy provider, and UI changes without Behat/PHPUnit coverage.
-
-## Commands to try
-
-Use project-specific paths/config first. Common examples:
+Prefer repo README/CI. Common:
 
 ```bash
-vendor/bin/phpunit path/to/plugin/tests/some_test.php
+vendor/bin/phpunit path/to/test.php
 vendor/bin/phpcs --standard=moodle path/to/plugin
-npm install
 npx grunt amd
 php admin/cli/upgrade.php
 php admin/tool/phpunit/cli/init.php
 ```
 
-If commands differ in the repository, follow its README/CI scripts.
-
-## Deeper reference
-
-Read [REFERENCE.md](REFERENCE.md) for API choices, file conventions, security rules, and links to Moodle docs.
+Use `REFERENCE.md` only when exact API/file pattern needed.
